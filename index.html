@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title> Anytime is Train Time </title>
+
+		<script src="https://www.gstatic.com/firebasejs/4.1.1/firebase.js"></script>
+
+		<script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+	<div class="container">
+
+		<br>
+	
+		<div class="jumbotron">
+			<h1 class="text-center"> Anytime is Train Time </h1>
+		</div>
+	
+
+
+
+		<div class="row">
+			<div class="col-lg-12">
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">
+							<strong> Current Train Schedule </strong>
+						</h3>
+					</div>
+		
+			
+					<div class="panel-body">
+						<table class="table table-hover" id="dispay-data">
+							<thead>
+								<tr>
+									<th> Train Name </th>
+									<th> Destination </th>
+									<th> Frequency </th>
+									<th> Next Arrival </th>
+									<th> Minutes Away <th>
+								</tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+		
+	
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">
+							<strong> Add Train </strong>
+						</h3>
+					</div>
+			
+
+					<div class="panel-body">
+						<form role="form">
+
+							<div class="form-group">
+								<label for="name-input"> Train Name </label>
+								<input class="form-control" id="name-input" type="text">
+							</div>
+
+							<div class="form-group">
+								<label for="destination-input"> Destination </label>
+								<input class="form-control" id="destination-input" type="text">
+							</div>
+
+							<div class="form-group">
+								<label for="time-input"> First Train Time</label>
+								<input class="form-control" id="time-input" type="time">
+							</div>
+
+							<div class="form-group">
+								<label for="frequency-input"> Frequency (min) </label>
+								<input class="form-control" id="frequency-input" type="number">
+							</div>
+
+							<button class="btn btn-default" id="add-train" type="Submit">Submit</button>
+
+						</form>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>	
+
+</body>
+
+</html>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+<script>
+ 
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyBBwyl6_cPXd9zuMngyP9Z6v418oLrNHOI",
+    authDomain: "homework7-f0dfe.firebaseapp.com",
+    databaseURL: "https://homework7-f0dfe.firebaseio.com",
+    projectId: "homework7-f0dfe",
+    storageBucket: "homework7-f0dfe.appspot.com",
+    messagingSenderId: "820260951799"
+  };
+
+  firebase.initializeApp(config);
+
+  // Define Variables
+
+  var database = firebase.database();
+
+  var name = "";
+  var destination = "";
+  var time = "";
+  var frequency = "";
+
+
+  $("#add-train").on("click", function(){
+
+  	event.preventDefault();
+
+   	name = $("#name-input").val().trim();
+  	destination = $("#destination-input").val().trim();
+  	time = $("#time-input").val();
+  	frequency = $("#frequency-input").val();
+
+  	database.ref().set({
+  		name: name,
+  		destination: destination,
+  		time: time,
+  		frequency: frequency
+
+  	});
+
+  });
+
+  database.ref().on("value", function(snapshot){
+  	  	
+  	var nameData = snapshot.val().name;
+  	var destinationData = snapshot.val().destination;
+  	var timeData = snapshot.val().time;
+  	var frequencyData = snapshot.val().frequency;
+
+  	// user input is logged as military time
+  	console.log("1 " + timeData);
+
+  	// first train time (timeData in future) in milliseconds
+	var firstTime = moment(timeData,"hh:mm")
+	console.log("2 " + firstTime);
+
+ 	var timeConvert = firstTime.subtract(1, "years");
+      
+    // first train time (timeData converted to past) in milliseconds
+    console.log("3 " + timeConvert);
+
+    // current time
+    var currentTime = moment();
+
+    // difference of current time from first train time
+    var timeDelta = currentTime.diff(firstTime, "minutes");
+    console.log("4 " + timeDelta);
+
+    // get minutes away
+    var remainder = timeDelta % frequencyData;
+    var minutesAway = frequencyData - remainder;
+
+    // next arrival time
+    var nextArrival = currentTime.add(minutesAway, "minutes");
+    var nextArrivalFormat = moment(nextArrival).format("hh:mm");
+
+    // display data and append
+  	$("#dispay-data").append("<tr><td> " + nameData + "</td><td>" + destinationData + "</td><td>" + frequencyData+ "</td><td>" +  nextArrivalFormat + "</td><td>" + minutesAway + "</td></tr>")
+  	
+  });
+	
+</script>
+	
